@@ -14,6 +14,17 @@ if SERVER then
 
 	local projectiles = {}
 
+	function NetworkProjectiles()
+		net.Start("projectile_bullets_table")
+			local json = util.TableToJSON(projectiles)
+			local compressed = util.Compress(json)
+			local bytes = #compressed
+
+			net.WriteUInt(bytes, 16)
+			net.WriteData(compressed, bytes)
+		net.Broadcast()
+	end
+
 	hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
 		if ent:IsPlayer() then
 			ent = ent:GetActiveWeapon()
@@ -44,27 +55,19 @@ if SERVER then
 			bullet.attacker = attacker:EntIndex()
 			bullet.inflictor = ent:EntIndex()
 			bullet.DistMetersPerSecond = 4000
-			bullet.DropMetersPerSecond = 1
+			bullet.DropMetersPerSecond = 0.25
 			bullet.pos = bulletinfo.Src
 			bullet.ang = (bulletinfo.Dir + offset):Angle()
 			bullet.vel = bullet.ang:Forward() * ((bullet.DistMetersPerSecond / 0.01905) * engine.TickInterval())
 
 			table.insert(projectiles, bullet)
+			NetworkProjectiles()
 		end
 
 		return false
 	end)
 
 	hook.Add("Think", "Projectile_Bullets_Think", function()
-		net.Start("projectile_bullets_table")
-			local json = util.TableToJSON(projectiles)
-			local compressed = util.Compress(json)
-			local bytes = #compressed
-
-			net.WriteUInt(bytes, 16)
-			net.WriteData(compressed, bytes)
-		net.Broadcast()
-
 		for k, bullet in pairs(projectiles) do
 			bullet.pos = bullet.pos + (bullet.vel * engine.TickInterval())
 			bullet.vel = bullet.vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
@@ -114,6 +117,19 @@ elseif CLIENT then
 
 	hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
 		return false
+	end)
+
+	hook.Add("Think", "Projectile_Bullets_Think", function()
+		for k, bullet in pairs(projectiles) do
+			bullet.pos = bullet.pos + (bullet.vel * engine.TickInterval())
+			bullet.vel = bullet.vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
+
+			local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = Entity(bullet.attacker), start = bullet.pos + bullet.ang:Forward() * -32, endpos = bullet.pos + bullet.ang:Forward() * 32})
+
+			if trace.Hit then
+				table.remove(projectiles, k)
+			end
+		end
 	end)
 
 	hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_Think", function()

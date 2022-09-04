@@ -15,6 +15,8 @@ if SERVER then
 	local projectiles = {}
 
 	hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
+		math.randomseed(os.time())
+
 		if ent:IsPlayer() then
 			ent = ent:GetActiveWeapon()
 		end
@@ -43,7 +45,9 @@ if SERVER then
 			bullet.DistMetersPerSecond = 4000
 			bullet.DropMetersPerSecond = 1
 			bullet.pos = bulletinfo.Src
-			bullet.ang = (bulletinfo.Dir + Vector(math.Rand(-bulletinfo.Spread.x, bulletinfo.Spread.x), 0, math.Rand(-bulletinfo.Spread.y, bulletinfo.Spread.y))):Angle()
+			local offset = Vector(0, math.Rand(-bulletinfo.Spread.x, bulletinfo.Spread.x), math.Rand(-bulletinfo.Spread.y, bulletinfo.Spread.y))
+			offset:Rotate(bulletinfo.Dir:Angle())
+			bullet.ang = (bulletinfo.Dir + offset):Angle()
 			bullet.vel = bullet.ang:Forward() * ((bullet.DistMetersPerSecond / 0.01905) * engine.TickInterval())
 
 			table.insert(projectiles, bullet)

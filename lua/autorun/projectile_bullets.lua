@@ -8,7 +8,6 @@ if SERVER then
 		damage = 0,
 		attacker = 0,
 		inflictor = 0,
-		MinuteOfArc = 0,
 		DistMetersPerSecond = 0,
 		DropMetersPerSecond = 0
 	}
@@ -16,6 +15,10 @@ if SERVER then
 	local projectiles = {}
 
 	hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
+		if ent:IsPlayer() then
+			ent = ent:GetActiveWeapon()
+		end
+
 		for i = 1, bulletinfo.Num or 1, 1 do
 			local attacker = bulletinfo.Attacker
 			local damage = bulletinfo.Damage
@@ -37,11 +40,10 @@ if SERVER then
 			bullet.damage = damage
 			bullet.attacker = attacker:EntIndex()
 			bullet.inflictor = ent:EntIndex()
-			bullet.MinuteOfArc = bulletinfo.Spread
 			bullet.DistMetersPerSecond = 4000
 			bullet.DropMetersPerSecond = 1
 			bullet.pos = bulletinfo.Src
-			bullet.ang = bulletinfo.Dir:Angle() + Angle(math.Rand(-bullet.MinuteOfArc, bullet.MinuteOfArc), math.Rand(-bullet.MinuteOfArc, bullet.MinuteOfArc), 0)
+			bullet.ang = (bulletinfo.Dir + Vector(math.Rand(-bulletinfo.Spread.x, bulletinfo.Spread.x), 0, math.Rand(-bulletinfo.Spread.y, bulletinfo.Spread.y))):Angle()
 			bullet.vel = bullet.ang:Forward() * ((bullet.DistMetersPerSecond / 0.01905) * engine.TickInterval())
 
 			table.insert(projectiles, bullet)

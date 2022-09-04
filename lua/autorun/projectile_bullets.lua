@@ -37,6 +37,9 @@ if SERVER then
 				end
 			end
 
+			local offset = Vector(0, math.Rand(-bulletinfo.Spread.x, bulletinfo.Spread.x), math.Rand(-bulletinfo.Spread.y, bulletinfo.Spread.y))
+			offset:Rotate(bulletinfo.Dir:Angle())
+
 			local bullet = table.Copy(Projectile)
 
 			bullet.damage = damage
@@ -45,8 +48,6 @@ if SERVER then
 			bullet.DistMetersPerSecond = 4000
 			bullet.DropMetersPerSecond = 1
 			bullet.pos = bulletinfo.Src
-			local offset = Vector(0, math.Rand(-bulletinfo.Spread.x, bulletinfo.Spread.x), math.Rand(-bulletinfo.Spread.y, bulletinfo.Spread.y))
-			offset:Rotate(bulletinfo.Dir:Angle())
 			bullet.ang = (bulletinfo.Dir + offset):Angle()
 			bullet.vel = bullet.ang:Forward() * ((bullet.DistMetersPerSecond / 0.01905) * engine.TickInterval())
 

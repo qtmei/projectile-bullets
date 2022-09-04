@@ -24,8 +24,12 @@ if SERVER then
 				attacker = ent
 			end
 
-			if damage == 0 then
-				damage = 14
+			if damage == 0 then //HL2 weapons return 0
+				damage = game.GetAmmoData(game.GetAmmoID(bulletinfo.AmmoType)).plydmg //sometimes this will get the damage of the HL2 weapon, other times it returns a ConVar
+
+				if !isnumber(damage) then
+					damage = GetConVar(damage):GetInt()
+				end
 			end
 
 			local bullet = table.Copy(Projectile)

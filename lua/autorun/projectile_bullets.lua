@@ -35,7 +35,7 @@ if SERVER then
 				end
 			end
 
-			local offset = Vector(0, math.Rand(-bulletinfo.Spread.x, bulletinfo.Spread.x), math.Rand(-bulletinfo.Spread.y, bulletinfo.Spread.y))
+			local offset = Vector(0, math.Rand(-(bulletinfo.Spread.x / 2), bulletinfo.Spread.x / 2), math.Rand(-(bulletinfo.Spread.y / 2), bulletinfo.Spread.y / 2))
 			offset:Rotate(bulletinfo.Dir:Angle())
 
 			local bullet = table.Copy(Projectile)

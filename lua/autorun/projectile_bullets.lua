@@ -90,10 +90,6 @@ if SERVER then
 
 				table.remove(projectiles, k)
 			end
-
-			if bullet.vel:Length2D() < 10 then
-				table.remove(projectiles, k)
-			end
 		end
 	end)
 elseif CLIENT then

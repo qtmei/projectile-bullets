@@ -15,8 +15,6 @@ if SERVER then
 	local projectiles = {}
 
 	hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
-		math.randomseed(os.time())
-
 		if ent:IsPlayer() then
 			ent = ent:GetActiveWeapon()
 		end

@@ -67,7 +67,7 @@ if SERVER then
 		return false
 	end)
 
-	hook.Add("Think", "Projectile_Bullets_Think", function()
+	hook.Add("Tick", "Projectile_Bullets_Tick", function()
 		for k, bullet in pairs(projectiles) do
 			bullet.pos = bullet.pos + (bullet.vel * engine.TickInterval())
 			bullet.vel = bullet.vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
@@ -119,7 +119,7 @@ elseif CLIENT then
 		return false
 	end)
 
-	hook.Add("Think", "Projectile_Bullets_Think", function()
+	hook.Add("Tick", "Projectile_Bullets_Tick", function()
 		for k, bullet in pairs(projectiles) do
 			bullet.pos = bullet.pos + (bullet.vel * engine.TickInterval())
 			bullet.vel = bullet.vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
@@ -132,7 +132,7 @@ elseif CLIENT then
 		end
 	end)
 
-	hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_Think", function()
+	hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
 		for k, bullet in pairs(projectiles) do
 			render.SetColorMaterial()
 			render.DrawBox(bullet.pos, bullet.ang, Vector(-4, -0.5, -0.5), Vector(4, 0.5, 0.5), Color(255, 255 * 0.75, 0))

@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-CreateConVar("projectile_bullets_speed", 4000, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet speed in meters/second", 1, 4000)
+CreateConVar("projectile_bullets_speed", 4000, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet speed in meters/second")
 CreateConVar("projectile_bullets_drop", 0.25, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet drop in meters/second")
 
 local projectiles = {}
@@ -47,7 +47,8 @@ hook.Add("Tick", "Projectile_Bullets_Tick", function()
 		bullet.Pos = bullet.Pos + (bullet.Vel * engine.TickInterval())
 		bullet.Vel = bullet.Vel + Vector(0, 0, -((bullet.Drop / 0.01905) * engine.TickInterval()))
 
-		local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = bullet.Attacker, start = bullet.Pos + bullet.Dir * -32, endpos = bullet.Pos + bullet.Dir * 32})
+		local length = bullet.Pos:Distance(bullet.Pos + (bullet.Vel * engine.TickInterval())) / 2
+		local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = bullet.Attacker, start = bullet.Pos + bullet.Dir * -length, endpos = bullet.Pos + bullet.Dir * length})
 
 		if trace.Hit then
 			if SERVER then

@@ -1,3 +1,5 @@
+AddCSLuaFile()
+
 local projectiles = {}
 
 hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)

@@ -1,89 +1,60 @@
-if SERVER then
-	util.AddNetworkString("projectile_bullets_table")
+local projectiles = {}
 
-	local Projectile = {
-		pos = Vector(0, 0, 0),
-		ang = Angle(0, 0, 0),
-		vel = Vector(0, 0, 0),
-		damage = 0,
-		attacker = 0,
-		inflictor = 0,
-		DistMetersPerSecond = 0,
-		DropMetersPerSecond = 0
-	}
-
-	local projectiles = {}
-
-	function NetworkProjectiles()
-		net.Start("projectile_bullets_table")
-			local json = util.TableToJSON(projectiles)
-			local compressed = util.Compress(json)
-			local bytes = #compressed
-
-			net.WriteUInt(bytes, 16)
-			net.WriteData(compressed, bytes)
-		net.Broadcast()
+hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
+	if ent:IsPlayer() then
+		ent = ent:GetActiveWeapon()
 	end
 
-	hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
-		if ent:IsPlayer() then
-			ent = ent:GetActiveWeapon()
+	if !IsValid(bulletinfo.Attacker) then
+		bulletinfo.Attacker = ent
+	end
+
+	if bulletinfo.Damage == 0 then //HL2 weapons return 0
+		bulletinfo.Damage = game.GetAmmoData(game.GetAmmoID(bulletinfo.AmmoType)).plydmg //sometimes this will get the damage of the HL2 weapon, other times it returns a ConVar
+
+		if !isnumber(bulletinfo.Damage) then
+			bulletinfo.Damage = GetConVar(bulletinfo.Damage):GetInt()
 		end
+	end
 
-		for i = 1, bulletinfo.Num or 1, 1 do
-			local attacker = bulletinfo.Attacker
-			local damage = bulletinfo.Damage
+	bulletinfo.Inflictor = ent
+	bulletinfo.DistMetersPerSecond = 4000
+	bulletinfo.DropMetersPerSecond = 0.25
+	bulletinfo.Pos = bulletinfo.Src
 
-			if !IsValid(attacker) then
-				attacker = ent
-			end
+	for i = 1, bulletinfo.Num or 1, 1 do
+		local bullet = table.Copy(bulletinfo)
 
-			if damage == 0 then //HL2 weapons return 0
-				damage = game.GetAmmoData(game.GetAmmoID(bulletinfo.AmmoType)).plydmg //sometimes this will get the damage of the HL2 weapon, other times it returns a ConVar
+		local offset = Vector(0, math.Rand(-bullet.Spread.x, bullet.Spread.x), math.Rand(-bullet.Spread.y, bullet.Spread.y))
+		offset:Rotate(bullet.Dir:Angle())
 
-				if !isnumber(damage) then
-					damage = GetConVar(damage):GetInt()
-				end
-			end
+		bullet.Dir = bullet.Dir + offset
+		bullet.Vel = bullet.Dir * ((bullet.DistMetersPerSecond / 0.01905) * engine.TickInterval())
 
-			local offset = Vector(0, math.Rand(-(bulletinfo.Spread.x / 2), bulletinfo.Spread.x / 2), math.Rand(-(bulletinfo.Spread.y / 2), bulletinfo.Spread.y / 2))
-			offset:Rotate(bulletinfo.Dir:Angle())
+		table.insert(projectiles, bullet)
+	end
 
-			local bullet = table.Copy(Projectile)
+	return false
+end)
 
-			bullet.damage = damage
-			bullet.attacker = attacker:EntIndex()
-			bullet.inflictor = ent:EntIndex()
-			bullet.DistMetersPerSecond = 4000
-			bullet.DropMetersPerSecond = 0.25
-			bullet.pos = bulletinfo.Src
-			bullet.ang = (bulletinfo.Dir + offset):Angle()
-			bullet.vel = bullet.ang:Forward() * ((bullet.DistMetersPerSecond / 0.01905) * engine.TickInterval())
+hook.Add("Tick", "Projectile_Bullets_Tick", function()
+	for k, bullet in pairs(projectiles) do
+		bullet.Pos = bullet.Pos + (bullet.Vel * engine.TickInterval())
+		bullet.Vel = bullet.Vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
 
-			table.insert(projectiles, bullet)
-			NetworkProjectiles()
-		end
+		local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = bullet.Attacker, start = bullet.Pos + bullet.Dir * -32, endpos = bullet.Pos + bullet.Dir * 32})
 
-		return false
-	end)
-
-	hook.Add("Tick", "Projectile_Bullets_Tick", function()
-		for k, bullet in pairs(projectiles) do
-			bullet.pos = bullet.pos + (bullet.vel * engine.TickInterval())
-			bullet.vel = bullet.vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
-
-			local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = Entity(bullet.attacker), start = bullet.pos + bullet.ang:Forward() * -32, endpos = bullet.pos + bullet.ang:Forward() * 32})
-
-			if trace.Hit then
+		if trace.Hit then
+			if SERVER then
 				local ent = trace.Entity
 
 				if IsValid(ent) then
 					local dmginfo = DamageInfo()
 
 					dmginfo:SetDamageType(DMG_BULLET) 
-					dmginfo:SetDamage(bullet.damage)
-					dmginfo:SetAttacker(Entity(bullet.attacker))
-					dmginfo:SetInflictor(Entity(bullet.inflictor))
+					dmginfo:SetDamage(bullet.Damage)
+					dmginfo:SetAttacker(bullet.Attacker)
+					dmginfo:SetInflictor(bullet.Inflictor)
 					dmginfo:SetReportedPosition(trace.HitPos)
 
 					ent:TakeDamageInfo(dmginfo)
@@ -99,43 +70,22 @@ if SERVER then
 				effectdata:SetHitBox(trace.HitBox)
 
 				util.Effect("Impact", effectdata)
-
-				table.remove(projectiles, k)
 			end
+
+			table.remove(projectiles, k)
 		end
-	end)
-elseif CLIENT then
-	local projectiles = {}
 
-	net.Receive("projectile_bullets_table", function(len, ply)
-		local bytes = net.ReadUInt(16)
-		local compressed = net.ReadData(bytes)
-		local json = util.Decompress(compressed)
-
-		projectiles = util.JSONToTable(json)
-	end)
-
-	hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
-		return false
-	end)
-
-	hook.Add("Tick", "Projectile_Bullets_Tick", function()
-		for k, bullet in pairs(projectiles) do
-			bullet.pos = bullet.pos + (bullet.vel * engine.TickInterval())
-			bullet.vel = bullet.vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
-
-			local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = Entity(bullet.attacker), start = bullet.pos + bullet.ang:Forward() * -32, endpos = bullet.pos + bullet.ang:Forward() * 32})
-
-			if trace.Hit then
-				table.remove(projectiles, k)
-			end
+		if bullet.Pos:Distance(bullet.Src) >= bullet.Distance then
+			table.remove(projectiles, k)
 		end
-	end)
+	end
+end)
 
-	hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
-		for k, bullet in pairs(projectiles) do
-			render.SetColorMaterial()
-			render.DrawBox(bullet.pos, bullet.ang, Vector(-4, -0.5, -0.5), Vector(4, 0.5, 0.5), Color(255, 255 * 0.75, 0))
-		end
-	end)
-end
+if !CLIENT then return end
+
+hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
+	for k, bullet in pairs(projectiles) do
+		render.SetColorMaterial()
+		render.DrawBox(bullet.Pos, bullet.Dir:Angle(), Vector(-4, -0.5, -0.5), Vector(4, 0.5, 0.5), Color(255, 255 * 0.75, 0))
+	end
+end)

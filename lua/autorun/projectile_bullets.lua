@@ -1,7 +1,7 @@
 AddCSLuaFile()
 
-CreateConVar("projectile_bullets_speed", 700, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet speed in meters/second")
-CreateConVar("projectile_bullets_drop", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet drop in meters/second")
+CreateConVar("projectile_bullets_speed", 700, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet speed in meters/second", 1, 1000)
+CreateConVar("projectile_bullets_drop", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet drop in meters/second", 0, 2)
 
 local bullets = {}
 

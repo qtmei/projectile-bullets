@@ -1,5 +1,8 @@
 AddCSLuaFile()
 
+CreateConVar("projectile_bullets_speed", 4000, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet speed in meters/second", 1, 4000)
+CreateConVar("projectile_bullets_drop", 0.25, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet drop in meters/second")
+
 local projectiles = {}
 
 hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
@@ -20,8 +23,8 @@ hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(e
 	end
 
 	bulletinfo.Inflictor = ent
-	bulletinfo.DistMetersPerSecond = 4000
-	bulletinfo.DropMetersPerSecond = 0.25
+	bulletinfo.Speed = GetConVar("projectile_bullets_speed"):GetFloat()
+	bulletinfo.Drop = GetConVar("projectile_bullets_drop"):GetFloat()
 	bulletinfo.Pos = bulletinfo.Src
 
 	for i = 1, bulletinfo.Num, 1 do
@@ -31,7 +34,7 @@ hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(e
 		offset:Rotate(bullet.Dir:Angle())
 
 		bullet.Dir = bullet.Dir + offset
-		bullet.Vel = bullet.Dir * ((bullet.DistMetersPerSecond / 0.01905) * engine.TickInterval())
+		bullet.Vel = bullet.Dir * ((bullet.Speed / 0.01905) * engine.TickInterval())
 
 		table.insert(projectiles, bullet)
 	end
@@ -42,7 +45,7 @@ end)
 hook.Add("Tick", "Projectile_Bullets_Tick", function()
 	for k, bullet in pairs(projectiles) do
 		bullet.Pos = bullet.Pos + (bullet.Vel * engine.TickInterval())
-		bullet.Vel = bullet.Vel + Vector(0, 0, -((bullet.DropMetersPerSecond / 0.01905) * engine.TickInterval()))
+		bullet.Vel = bullet.Vel + Vector(0, 0, -((bullet.Drop / 0.01905) * engine.TickInterval()))
 
 		local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = bullet.Attacker, start = bullet.Pos + bullet.Dir * -32, endpos = bullet.Pos + bullet.Dir * 32})
 

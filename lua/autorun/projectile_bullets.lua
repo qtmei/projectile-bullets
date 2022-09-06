@@ -24,7 +24,7 @@ hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(e
 	bulletinfo.DropMetersPerSecond = 0.25
 	bulletinfo.Pos = bulletinfo.Src
 
-	for i = 1, bulletinfo.Num or 1, 1 do
+	for i = 1, bulletinfo.Num, 1 do
 		local bullet = table.Copy(bulletinfo)
 
 		local offset = Vector(0, math.Rand(-bullet.Spread.x, bullet.Spread.x), math.Rand(-bullet.Spread.y, bullet.Spread.y))

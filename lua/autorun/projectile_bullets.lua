@@ -47,8 +47,7 @@ hook.Add("Tick", "Projectile_Bullets_Tick", function()
 		bullet.Pos = bullet.Pos + (bullet.Vel * engine.TickInterval())
 		bullet.Vel = bullet.Vel + Vector(0, 0, -(bullet.Drop / 0.01905))
 
-		local length = bullet.Pos:Distance(bullet.Pos + (bullet.Vel * engine.TickInterval()))
-		local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = bullet.Attacker, start = bullet.Pos, endpos = bullet.Pos + bullet.Dir * length})
+		local trace = util.TraceLine({mask = MASK_SHOT, ignoreworld = false, filter = bullet.Attacker, start = bullet.Pos, endpos = bullet.Pos + (bullet.Vel * engine.TickInterval())})
 
 		if trace.Hit then
 			if SERVER then

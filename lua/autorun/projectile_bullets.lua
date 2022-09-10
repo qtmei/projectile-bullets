@@ -10,7 +10,7 @@ if SERVER then
 
 	if !file.Exists("data/projectile_bullets/config.json", "GAME") then
 		local tbl = {
-			["comment"] = "This is an example. 'class' is the entity class name of the weapon. 'speed' and 'drop' is measured in meters/second",
+			["comment"] = "this is an example. 'class' is the entity class name of the weapon. 'speed' and 'drop' are measured in meters/second",
 			["class"] = {["speed"] = 100, ["drop"] = 0.01},
 		}
 		local json = util.TableToJSON(tbl, true)
@@ -118,11 +118,11 @@ hook.Add("Tick", "Projectile_Bullets_Tick", function()
 	end
 end)
 
-if CLIENT then
-	hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
-		for k, bullet in pairs(bullets) do
-			render.SetColorMaterial()
-			render.DrawBox(bullet.Pos, bullet.Dir:Angle(), Vector(0, -0.5, -0.5), Vector(bullet.Pos:Distance(bullet.Pos + (bullet.Vel * engine.TickInterval())), 0.5, 0.5), Color(255, 255 * 0.75, 0))
-		end
-	end)
-end
+if !CLIENT then return end
+
+hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
+	for k, bullet in pairs(bullets) do
+		render.SetColorMaterial()
+		render.DrawBox(bullet.Pos, bullet.Dir:Angle(), Vector(0, -0.5, -0.5), Vector(bullet.Pos:Distance(bullet.Pos + (bullet.Vel * engine.TickInterval())), 0.5, 0.5), Color(255, 255 * 0.75, 0))
+	end
+end)

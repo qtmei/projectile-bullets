@@ -24,9 +24,9 @@ end
 local function ReadCFG(class)
 	local json = ""
 
-	if SERVER then
+	if SERVER or game.SinglePlayer() then
 		json = file.Read("data/projectile_bullets/config.json", "GAME") or "{}"
-	elseif CLIENT then
+	elseif CLIENT and !game.SinglePlayer() then
 		json = file.Read("download/data/projectile_bullets/config.json", "GAME") or "{}"
 	end
 

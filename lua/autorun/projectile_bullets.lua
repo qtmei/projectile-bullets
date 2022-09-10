@@ -10,7 +10,7 @@ if SERVER then
 
 	if !file.Exists("data/projectile_bullets/config.json", "GAME") then
 		local tbl = {
-			["comment"] = "this is an example. 'class' is the entity class name of the weapon. 'speed' and 'drop' are measured in meters/second",
+			["comment"] = "this is an example. 'class' is the class name of the weapon entity. 'speed' and 'drop' are measured in meters/second",
 			["class"] = {["speed"] = 100, ["drop"] = 0.01},
 		}
 		local json = util.TableToJSON(tbl, true)
@@ -53,8 +53,11 @@ hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(e
 	end
 
 	bulletinfo.Inflictor = ent
-	bulletinfo.Speed = ReadCFG(bulletinfo.Inflictor:GetClass())["speed"]
-	bulletinfo.Drop = ReadCFG(bulletinfo.Inflictor:GetClass())["drop"]
+
+	local cfg = ReadCFG(bulletinfo.Inflictor:GetClass())
+
+	bulletinfo.Speed = cfg["speed"]
+	bulletinfo.Drop = cfg["drop"]
 	bulletinfo.Pos = bulletinfo.Src
 
 	for i = 1, bulletinfo.Num, 1 do

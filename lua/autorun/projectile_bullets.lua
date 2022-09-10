@@ -1,7 +1,39 @@
 AddCSLuaFile()
 
-CreateConVar("projectile_bullets_speed", 700, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet speed in meters/second", 1, 1000)
-CreateConVar("projectile_bullets_drop", 1, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet drop in meters/second", 0, 2)
+CreateConVar("bullet_speed_default", 100, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet speed in meters/second", 1, 1000)
+CreateConVar("bullet_drop_default", 0.01, {FCVAR_REPLICATED, FCVAR_ARCHIVE, FCVAR_NOTIFY}, "bullet drop in meters/second", 0, 2)
+
+if SERVER then
+	if !file.Exists("data/projectile_bullets", "GAME") then
+		file.CreateDir("projectile_bullets")
+	end
+
+	if !file.Exists("data/projectile_bullets/config.json", "GAME") then
+		local tbl = {
+			["comment"] = "This is an example. 'class' is the entity class name of the weapon. 'speed' and 'drop' is measured in meters/second",
+			["class"] = {["speed"] = 100, ["drop"] = 0.01},
+		}
+		local json = util.TableToJSON(tbl, true)
+
+		file.Write("projectile_bullets/config.json", json)
+	end
+
+	resource.AddFile("data/projectile_bullets/config.json")
+end
+
+local function ReadCFG(class)
+	local json = ""
+
+	if SERVER then
+		json = file.Read("data/projectile_bullets/config.json", "GAME") or "{}"
+	elseif CLIENT then
+		json = file.Read("download/data/projectile_bullets/config.json", "GAME") or "{}"
+	end
+
+	local tbl = util.JSONToTable(json)
+
+	return tbl[class] or {["speed"] = GetConVar("bullet_speed_default"):GetFloat(), ["drop"] = GetConVar("bullet_drop_default"):GetFloat()}
+end
 
 local bullets = {}
 
@@ -23,8 +55,8 @@ hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(e
 	end
 
 	bulletinfo.Inflictor = ent
-	bulletinfo.Speed = GetConVar("projectile_bullets_speed"):GetFloat()
-	bulletinfo.Drop = GetConVar("projectile_bullets_drop"):GetFloat()
+	bulletinfo.Speed = ReadCFG(bulletinfo.Inflictor:GetClass())["speed"]
+	bulletinfo.Drop = ReadCFG(bulletinfo.Inflictor:GetClass())["drop"]
 	bulletinfo.Pos = bulletinfo.Src
 
 	for i = 1, bulletinfo.Num, 1 do
@@ -86,11 +118,11 @@ hook.Add("Tick", "Projectile_Bullets_Tick", function()
 	end
 end)
 
-if !CLIENT then return end
-
-hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
-	for k, bullet in pairs(bullets) do
-		render.SetColorMaterial()
-		render.DrawBox(bullet.Pos, bullet.Dir:Angle(), Vector(-4, -0.5, -0.5), Vector(4, 0.5, 0.5), Color(255, 255 * 0.75, 0))
-	end
-end)
+if CLIENT then
+	hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
+		for k, bullet in pairs(bullets) do
+			render.SetColorMaterial()
+			render.DrawBox(bullet.Pos, bullet.Dir:Angle(), Vector(0, -0.5, -0.5), Vector(bullet.Pos:Distance(bullet.Pos + (bullet.Vel * engine.TickInterval())), 0.5, 0.5), Color(255, 255 * 0.75, 0))
+		end
+	end)
+end

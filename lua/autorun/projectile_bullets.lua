@@ -36,23 +36,24 @@ end
 local bullets = {}
 
 hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(ent, bulletinfo)
-	if ent:IsPlayer() then
-		ent = ent:GetActiveWeapon()
+	bulletinfo.Inflictor = ent
+
+	if bulletinfo.Inflictor:IsPlayer() or bulletinfo.Inflictor:IsNPC() then
+		bulletinfo.Attacker = bulletinfo.Inflictor
+		bulletinfo.Inflictor = bulletinfo.Inflictor:GetActiveWeapon()
 	end
 
 	if !IsValid(bulletinfo.Attacker) then
-		bulletinfo.Attacker = ent
+		bulletinfo.Attacker = bulletinfo.Inflictor
 	end
 
-	if bulletinfo.Damage == 0 then //HL2 weapons return 0
-		bulletinfo.Damage = game.GetAmmoData(game.GetAmmoID(bulletinfo.AmmoType)).plydmg //sometimes this will get the damage of the HL2 weapon, other times it returns a ConVar
-
-		if !isnumber(bulletinfo.Damage) then
-			bulletinfo.Damage = GetConVar(bulletinfo.Damage):GetInt()
-		end
+	if bulletinfo.Damage == 0 and game.GetAmmoPlayerDamage(game.GetAmmoID(bulletinfo.AmmoType)) > 0 then //HL2 weapons return 0
+		bulletinfo.Damage = game.GetAmmoPlayerDamage(game.GetAmmoID(bulletinfo.AmmoType))
 	end
 
-	bulletinfo.Inflictor = ent
+	if bulletinfo.Force == 1 and game.GetAmmoForce(game.GetAmmoID(bulletinfo.AmmoType)) > 1 then //HL2 weapons return 1
+		bulletinfo.Force = game.GetAmmoForce(game.GetAmmoID(bulletinfo.AmmoType))
+	end
 
 	local cfg = ReadCFG(bulletinfo.Inflictor:GetClass())
 
@@ -91,10 +92,10 @@ hook.Add("Tick", "Projectile_Bullets_Tick", function()
 
 					dmginfo:SetDamageType(DMG_BULLET) 
 					dmginfo:SetDamage(bullet.Damage)
+					dmginfo:SetDamageForce(bullet.Dir * bullet.Force * GetConVar("phys_pushscale"):GetFloat())
 					dmginfo:SetAttacker(bullet.Attacker)
 					dmginfo:SetInflictor(bullet.Inflictor)
 					dmginfo:SetReportedPosition(trace.HitPos)
-					dmginfo:SetDamageForce(bullet.Dir * bullet.Force)
 
 					ent:TakeDamageInfo(dmginfo)
 				end

@@ -94,6 +94,7 @@ hook.Add("Tick", "Projectile_Bullets_Tick", function()
 					dmginfo:SetAttacker(bullet.Attacker)
 					dmginfo:SetInflictor(bullet.Inflictor)
 					dmginfo:SetReportedPosition(trace.HitPos)
+					dmginfo:SetDamageForce(bullet.Dir * bullet.Force)
 
 					ent:TakeDamageInfo(dmginfo)
 				end

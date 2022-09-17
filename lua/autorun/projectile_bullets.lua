@@ -47,12 +47,16 @@ hook.Add("EntityFireBullets", "Projectile_Bullets_EntityFireBullets", function(e
 		bulletinfo.Attacker = bulletinfo.Inflictor
 	end
 
-	if bulletinfo.Damage == 0 and game.GetAmmoPlayerDamage(game.GetAmmoID(bulletinfo.AmmoType)) > 0 then //HL2 weapons return 0
-		bulletinfo.Damage = game.GetAmmoPlayerDamage(game.GetAmmoID(bulletinfo.AmmoType))
+	local ammodata_damage = game.GetAmmoPlayerDamage(game.GetAmmoID(bulletinfo.AmmoType))
+
+	if bulletinfo.Damage == 0 and ammodata_damage > 0 then //HL2 weapons return 0
+		bulletinfo.Damage = ammodata_damage
 	end
 
-	if bulletinfo.Force == 1 and game.GetAmmoForce(game.GetAmmoID(bulletinfo.AmmoType)) > 1 then //HL2 weapons return 1
-		bulletinfo.Force = game.GetAmmoForce(game.GetAmmoID(bulletinfo.AmmoType))
+	local ammodata_force = game.GetAmmoForce(game.GetAmmoID(bulletinfo.AmmoType))
+
+	if bulletinfo.Force == 1 and ammodata_force > 1 then //HL2 weapons return 1
+		bulletinfo.Force = ammodata_force
 	end
 
 	local cfg = ReadCFG(bulletinfo.Inflictor:GetClass())

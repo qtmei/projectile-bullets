@@ -10,7 +10,7 @@ if SERVER then
 
 	if !file.Exists("data/projectile_bullets/config.json", "GAME") then
 		local tbl = {
-			["comment"] = "this is an example. 'class' is the class name of the weapon entity. 'speed' and 'drop' are measured in meters/second",
+			["comment"] = "this is an example. class is the class name of the weapon entity. speed and drop are measured in meters/second",
 			["class"] = {["speed"] = 100, ["drop"] = 0.01},
 		}
 		local json = util.TableToJSON(tbl, true)
@@ -22,10 +22,10 @@ if SERVER then
 end
 
 local function ReadCFG(class)
-	local json = file.Read("data/projectile_bullets/config.json", "GAME") or "{}"
+	local json = file.Read("data/projectile_bullets/config.json", "GAME")
 
-	if CLIENT and !game.SinglePlayer() then
-		json = file.Read("download/data/projectile_bullets/config.json", "GAME") or "{}"
+	if CLIENT and game.GetIPAddress() != "loopback" then
+		json = file.Read("download/data/projectile_bullets/config.json", "GAME")
 	end
 
 	local tbl = util.JSONToTable(json)

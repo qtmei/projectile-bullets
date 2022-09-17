@@ -11,7 +11,7 @@ if SERVER then
 	if !file.Exists("data/projectile_bullets/config.json", "GAME") then
 		local tbl = {
 			["comment"] = "this is an example. class is the class name of the weapon entity. speed and drop are measured in meters/second",
-			["class"] = {["speed"] = 100, ["drop"] = 0.01},
+			["class"] = {["speed"] = 100, ["drop"] = 0.01}
 		}
 		local json = util.TableToJSON(tbl, true)
 

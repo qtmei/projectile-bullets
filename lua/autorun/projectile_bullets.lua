@@ -129,7 +129,9 @@ if !CLIENT then return end
 
 hook.Add("PostDrawOpaqueRenderables", "Projectile_Bullets_PostDrawOpaqueRenderables", function()
 	for k, bullet in pairs(bullets) do
-		render.SetColorMaterial()
-		render.DrawBox(bullet.Pos, bullet.Dir:Angle(), Vector(0, -0.5, -0.5), Vector(bullet.Pos:Distance(bullet.Pos + (bullet.Vel * engine.TickInterval())), 0.5, 0.5), Color(255, 255 * 0.75, 0))
+		if bullet.Tracer > 0 then
+			render.SetColorMaterial()
+			render.DrawBox(bullet.Pos, bullet.Dir:Angle(), Vector(0, -0.5, -0.5), Vector(bullet.Pos:Distance(bullet.Pos + (bullet.Vel * engine.TickInterval())), 0.5, 0.5), Color(255, 255 * 0.75, 0))
+		end
 	end
 end)
